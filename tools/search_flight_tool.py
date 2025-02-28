@@ -35,6 +35,11 @@ class AmadeusFlightSearchTool(Tool):
             "description": "Optional currency code. Example: If the user wants to use euro currency, the code would be 'EUR'.",
             "nullable": True,
         },
+        "num_adults": {
+            "type": "integer",
+            "description": "Number of adults in the flight.",
+            "nullable": True,
+        },
     }
     output_type = "string"
 
@@ -72,6 +77,7 @@ class AmadeusFlightSearchTool(Tool):
         destination_airport: str,
         travel_date: str,
         currency: str = None,
+        adults: int = 1,
     ):
         """Fetches direct flights based on input criteria."""
         url = f"{self.base_url}/v2/shopping/flight-offers"
@@ -80,7 +86,7 @@ class AmadeusFlightSearchTool(Tool):
             "originLocationCode": departure_airport,
             "destinationLocationCode": destination_airport,
             "departureDate": travel_date,
-            "adults": 1,
+            "adults": adults,
             "nonStop": "true",
             "currencyCode": currency if currency else "USD",
             "max": 10,
@@ -150,6 +156,7 @@ class AmadeusFlightSearchTool(Tool):
         destination_country: str,
         travel_date: str,
         currency: str = None,
+        num_adults: int = 1,
     ) -> str:
         """Main function that returns flight data as a formatted string."""
         # Validate date format...
@@ -174,7 +181,7 @@ class AmadeusFlightSearchTool(Tool):
 
         # Look for direct flights
         flights = self.fetch_flights(
-            departure_airport, destination_airport, travel_date, currency
+            departure_airport, destination_airport, travel_date, currency, num_adults
         )
         flight_list = []
 

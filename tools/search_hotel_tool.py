@@ -194,8 +194,7 @@ class AmadeusHotelFinderTool(Tool):
                     )
             except Exception as e:
                 continue
-
-            # We don't need to overload the API for this demo...
+            # No need to overflow the API for this demo...
             if len(data) >= 15:
                 break
 
