@@ -1,20 +1,14 @@
-# TAPLA: Travel planning AI Agent   
-This project is a simple demonstration on how we can easily build an LLM-powered AI Agent with Hugging Face and smolagents.
-This simple Agent can use customized tools, making use of the [Amadeus API](https://developers.amadeus.com/) to achieve tasks such as:
-- Find available flights between two destination cities and figure out the best rates for a given date
-- Find the best available hotel deals on the destination city
+# Building AI Agents
+This repository holds some experiments I made with different Agentic AI frameworks such as :
+- [smolagents](https://github.com/huggingface/smolagents)
+- [LlamaIndex](https://www.llamaindex.ai/)
 
-## Install requirements
-```
-pip install -r requirements.txt
-```
+## Agents
 
-## Amadeus API
-**NOTE:** To test this application you need some API keys:
-- **Hugging Face**: Your API key from Hugging Face to get access to LLMs
-- **Amadeus API key**: An API key from Amadeus(testing key is fine).
+### Smolagents
+- [TAPLA-Travel-Planning-Agent](./TAPA-Travel-Planning-Agent/README.md): This simple Agent can use customized tools, making use of the [Amadeus API](https://developers.amadeus.com/) to achieve tasks such as:
+    - Find available flights between two destination cities and figure out the best rates for a given date
+    - Find the best available hotel deals on the destination city
 
-## Use the agent to plan your trip!
-You can use the agent to plan your trip by executing the code cells in the [notebook guide](./agent.ipynb).
-Note that for this simple demo application we make use of the testing API from [Amadeus](https://developers.amadeus.com/), therefore
-flights and hotel availability are **fake data**!
+### LlamaIndex
+- [Youtube-Master-Agent](./Youtube-Master-Agent/README.md): This agent can transcribe youtube videos (provided with a video link), generate summaries and answer questions on the content of those videos.
