@@ -1,5 +1,5 @@
 # YouTube Video Transcription/Summarization Agent
-A simple project on AI agents with LlamaIndex and HuggingFace's inference API's. The [Youtube-Expert-Agent](./agents/tubemaster.py) can transcribe youtube videos (provided with a video link), generate summaries and answer questions on the content of those videos.
+A simple project on AI agents with LlamaIndex and HuggingFace's inference API's. The [Youtube-Master-Agent](./agents/tubemaster.py) can transcribe youtube videos (provided with a video link), generate summaries and answer questions on the content of those videos.
 
 ## Agent Tools
 - **Transcription tool**: This [tool](./tools/transcriber.py) transcribes YouTube videos into text using Hugging Face's inference API (using the Whisper Model).
