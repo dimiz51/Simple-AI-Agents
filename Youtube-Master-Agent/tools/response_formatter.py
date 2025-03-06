@@ -13,15 +13,17 @@ Returns:
 """
 
 
-async def video_information_response(
-    summaries: List[str], titles: List[str], topics: List[str], urls: List[str]
+async def video_summary_response_formatter(
+    summaries: List[str],
+    titles: List[str],
+    topics: List[str],
+    urls: List[str],
 ) -> str:
-    """Formats the response with the summaries, transcriptions, titles, topics, and URLs for all videos in a multi-line string."""
+    """Provides a formatted response with the summaries, titles, topics, URLs for all videos the user asked for."""
     # Ensure all lists have the same length
     if not (len(summaries) == len(titles) == len(topics) == len(urls)):
         return "Error: Input lists must have the same length."
 
-    # Construct a formatted string with a neat layout
     formatted_response = []
 
     for i in range(len(summaries)):

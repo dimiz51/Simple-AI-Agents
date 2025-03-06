@@ -7,9 +7,9 @@ A simple project on AI agents with LlamaIndex and HuggingFace's inference API's.
 - **Response formatting tool**: This [tool](./tools/response_formatter.py) is just used to format the response of the agent in a more readable format.
 
 ## Getting Started
-To test the agent you can either follow the [Notebook Guide](agent.ipynb) or run the [CLI script](main.py) as for example:
+To test the agent you can either follow the [Notebook Guide](agent.ipynb) or run the [CLI script](main.py) for an interactive chat-mode as for example:
 ```
-python main.py "I want summaries for this video: https://www.youtube.com/watch?v=rEDzUT3ymw4" --show-reasoning
+python main.py --show-reasoning
 ```
 
 When using the `--show-reasoning` modem you will be able to see the detailed reasoning steps of the agent in your terminal.

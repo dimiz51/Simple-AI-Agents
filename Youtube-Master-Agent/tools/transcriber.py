@@ -14,7 +14,6 @@ async def transcribe_audio(audio_file: str) -> str:
     """
     Asynchronously transcribes an MP3 audio file into text using the Hugging Face Inference API.
     """
-
     # Load HF token
     HF_TOKEN = os.getenv("HF_API_KEY")
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
@@ -35,7 +34,9 @@ async def transcribe_audio(audio_file: str) -> str:
             result = await response.json()
 
     # Return transcription text or error message
-    return result.get(
+    result = result.get(
         "text",
         "Transcription failed for {audio_file}. Either no word was detected or there is something wrong with the audio file.",
     )
+
+    return result

@@ -6,7 +6,7 @@ from llama_index.core.agent.workflow import AgentWorkflow, ToolCallResult, Agent
 from llama_index.core.workflow import Context
 
 # Import tools
-from tools.response_formatter import video_information_response
+from tools.response_formatter import video_summary_response_formatter
 from tools.transcriber import transcribe_audio
 from tools.youtube_fetcher import download_youtube_audio
 
@@ -37,16 +37,16 @@ class TubeMasterAgent:
             tools_or_functions=[
                 transcribe_audio,
                 download_youtube_audio,
-                video_information_response,
+                video_summary_response_formatter,
             ],
             llm=self.llm,
             system_prompt=(
                 "You are an AI assistant that can use tools to transcribe audio from YouTube videos, "
-                "create summaries of the video's content, provide contextual information, and answer related questions. "
+                "create summaries of the video's content, provide contextual information, or can directly answer related questions. "
+                "Before you proceed to solve a task always make sure it is related to your role using the available tools. "
                 "You will NEVER respond to tasks unrelated to your role; instead, alert the user that you cannot perform the task. "
-                "ALWAYS provide summaries, titles, video topics, and video URLs for all successfully transcribed videos. "
                 "For failed transcriptions, return only successful results along with a detailed explanation of errors. "
-                "Use available tools to format the response effectively."
+                "ALWAYS use available tools to format the response nicely if a tool is suitable to the user's request. "
             ),
         )
 
@@ -57,9 +57,10 @@ class TubeMasterAgent:
         """
         Asynchronously processes a string prompt containing YouTube video URLs.
         """
-
         # Run the agent (Wraps the LlamaIndex AgentWorkflow run method)
-        handler = self.agent.run(video_prompt, ctx=self.context)
+        handler = self.agent.run(
+            self.format_video_prompt(video_prompt), ctx=self.context
+        )
 
         # Stream events and capture responses if needed
         if show_reasoning:
@@ -72,7 +73,7 @@ class TubeMasterAgent:
                     )
                 elif isinstance(ev, AgentStream):
                     print(ev.delta, end="", flush=True)
-            print()
+            print("********End Agent Reasoning********")
 
         # Get the final response
         response = await handler
@@ -83,6 +84,30 @@ class TubeMasterAgent:
 
     def run(self, video_prompt: str, show_reasoning: bool = False) -> str:
         """
-        Runs the async function inside an event loop for synchronous execution.
+        Runs the async function inside an event loop for synchronous execution,
+        while handling already running event loops properly.
         """
-        return asyncio.run(self.call_agent(video_prompt, show_reasoning=show_reasoning))
+        try:
+            loop = asyncio.get_running_loop()
+            # If we're in an active loop, schedule the coroutine and return the result
+            future = asyncio.ensure_future(
+                self.call_agent(video_prompt, show_reasoning)
+            )
+            return loop.run_until_complete(future)
+        except RuntimeError:
+            # If no loop is running, use asyncio.run()
+            return asyncio.run(self.call_agent(video_prompt, show_reasoning))
+
+    def format_video_prompt(self, user_prompt: str) -> str:
+        """
+        Formats the user's input to explicitly instruct the LLM to respond only if the request
+        relates to YouTube video transcription, summarization, question answering, or understanding.
+        """
+        return (
+            "You are an AI assistant specialized in YouTube video transcription, summarization, "
+            "content understanding, and answering related questions.\n\n"
+            "Provided summaries should always be short and follow a dedicated format.\n"
+            "ONLY respond if the request is related to these tasks.\n"
+            "If the request is unrelated, simply reply: 'I'm sorry, but I can only assist with YouTube video-related tasks.'\n\n"
+            f"User request: {user_prompt}"
+        )

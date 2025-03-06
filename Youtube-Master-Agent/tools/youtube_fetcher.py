@@ -4,7 +4,6 @@ import tempfile
 import uuid
 import yt_dlp
 
-
 async def download_youtube_audio(url: str) -> str:
     """
     Downloads a YouTube video and extracts its audio as an MP3 file, storing it in a temporary directory.
