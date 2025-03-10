@@ -12,7 +12,18 @@ To test the agent you can either follow the [Notebook Guide](agent.ipynb) or run
 python main.py --show-reasoning
 ```
 
-When using the `--show-reasoning` modem you will be able to see the detailed reasoning steps of the agent in your terminal.
+When using the `--show-reasoning` modem you will be able to see the detailed reasoning steps of the agent in your terminal. Additional options are:
+- `--respond-json`: When this flag is set the agent will always respond to a video summary request with a JSON-formatted string:
+```
+{
+    "Youtube Videos": [
+        "title": ...,
+        "url": ...,
+        "topic": ....,
+        "summary": ....
+    ]
+}
+```
 
 ### Prerequisites
 To use this project you need a Hugging Face API key. Once you have it export it as an env variable:

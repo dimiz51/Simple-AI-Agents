@@ -16,16 +16,34 @@ from agents.tubemaster import TubeMasterAgent
     show_default=True,
     help="Specify the model name.",
 )
-def main(show_reasoning, model_name):
+@click.option(
+    "--respond-json",
+    is_flag=True,
+    default=False,
+    help="Enable or disable JSON response format.",
+)
+def main(show_reasoning, model_name, respond_json):
     """
     CLI chat tool to interact with TubeMasterAgent asynchronously.
     """
-    asyncio.run(chat_loop(show_reasoning, model_name))
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        # If a loop exists, create a background task
+        print("Detected running event loop, using `asyncio.create_task()`")
+        task = loop.create_task(chat_loop(show_reasoning, model_name, respond_json))
+        loop.run_until_complete(task)  # Run until this task finishes
+    else:
+        # If no loop exists, start a fresh one
+        asyncio.run(chat_loop(show_reasoning, model_name, respond_json))
 
 
-async def chat_loop(show_reasoning, model_name):
+async def chat_loop(show_reasoning, model_name, json_response=False):
     """Asynchronous chat loop to interact with TubeMasterAgent."""
-    agent = TubeMasterAgent(model_id=model_name)
+    agent = TubeMasterAgent(model_id=model_name, respond_json=json_response)
 
     print("\nWelcome to Youtube Master Agent Chat! Type 'exit' to quit.\n")
     print(f"Using LLM model: {model_name}")
@@ -35,7 +53,7 @@ async def chat_loop(show_reasoning, model_name):
         prompt = input("You: ").strip()
 
         if prompt.lower() in ["exit", "quit"]:
-            print("Hope I helped you find what you were looking for! Goodbye!")
+            print("******** Goodbye! See you next time! ********")
             break
 
         response = await agent.call_agent(prompt, show_reasoning=show_reasoning)

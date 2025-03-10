@@ -4,9 +4,13 @@ import os
 from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 from llama_index.core.agent.workflow import AgentWorkflow, ToolCallResult, AgentStream
 from llama_index.core.workflow import Context
+from llama_index.core.tools import FunctionTool
+from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core import ChatPromptTemplate
+
 
 # Import tools
-from tools.response_formatter import video_summary_response_formatter
+from tools.response_formatter import json_response_formatter
 from tools.transcriber import transcribe_audio
 from tools.youtube_fetcher import download_youtube_audio
 
@@ -20,7 +24,7 @@ class TubeMasterAgent:
     transcribes, and summarizes YouTube videos.
     """
 
-    def __init__(self, model_id="Qwen/Qwen2.5-Coder-32B-Instruct"):
+    def __init__(self, model_id="Qwen/Qwen2.5-Coder-32B-Instruct", respond_json=False):
         """
         Initializes the agent with the required tools and system prompt.
         """
@@ -33,11 +37,21 @@ class TubeMasterAgent:
         # Large Language Model(LLM)
         self.llm = HuggingFaceInferenceAPI(model_name=model_id, token=token)
 
+        # Create the response formatting tool for video summaries
+        response_format_tool = FunctionTool.from_defaults(
+            async_fn=json_response_formatter,
+            name="video_summary_response_formatter",
+            description=(
+                "Provides a JSON-like formatted response with the summaries, titles, topics, URLs for all videos the user asked for."
+            ),
+            return_direct=True if respond_json else False,
+        )
+
         self.agent = AgentWorkflow.from_tools_or_functions(
             tools_or_functions=[
                 transcribe_audio,
                 download_youtube_audio,
-                video_summary_response_formatter,
+                response_format_tool,
             ],
             llm=self.llm,
             system_prompt=(
@@ -53,14 +67,12 @@ class TubeMasterAgent:
         # Agent's memory
         self.context = Context(self.agent)
 
-    async def call_agent(self, video_prompt: str, show_reasoning: bool = False) -> str:
+    async def call_agent(self, user_prompt: str, show_reasoning: bool = False) -> str:
         """
         Asynchronously processes a string prompt containing YouTube video URLs.
         """
         # Run the agent (Wraps the LlamaIndex AgentWorkflow run method)
-        handler = self.agent.run(
-            self.format_video_prompt(video_prompt), ctx=self.context
-        )
+        handler = self.agent.run(self.format_user_prompt(user_prompt), ctx=self.context)
 
         # Stream events and capture responses if needed
         if show_reasoning:
@@ -98,16 +110,26 @@ class TubeMasterAgent:
             # If no loop is running, use asyncio.run()
             return asyncio.run(self.call_agent(video_prompt, show_reasoning))
 
-    def format_video_prompt(self, user_prompt: str) -> str:
+    def format_user_prompt(self, user_request: str) -> str:
         """
         Formats the user's input to explicitly instruct the LLM to respond only if the request
         relates to YouTube video transcription, summarization, question answering, or understanding.
         """
-        return (
-            "You are an AI assistant specialized in YouTube video transcription, summarization, "
-            "content understanding, and answering related questions.\n\n"
-            "Provided summaries should always be short and follow a dedicated format.\n"
-            "ONLY respond if the request is related to these tasks.\n"
-            "If the request is unrelated, simply reply: 'I'm sorry, but I can only assist with YouTube video-related tasks.'\n\n"
-            f"User request: {user_prompt}"
-        )
+
+        message_templates = [
+            ChatMessage(
+                content="You are an AI assistant specialized in YouTube video transcription, summarization, "
+                "content understanding, and answering related questions.\n"
+                "ONLY respond if the request is related to these tasks.\n"
+                "Provided summaries should always be relatively short.\n"
+                "If the request is unrelated, simply reply: 'I'm sorry, but I can only assist with YouTube video-related tasks.'\n\n",
+                role=MessageRole.SYSTEM,
+            ),
+            ChatMessage(content=f"Request: {user_request}", role=MessageRole.USER),
+        ]
+
+        chat_template = ChatPromptTemplate(message_templates=message_templates)
+
+        formatted_prompt = chat_template.format()
+
+        return formatted_prompt
