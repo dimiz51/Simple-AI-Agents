@@ -10,7 +10,7 @@ async def json_response_formatter(
 ) -> str:
     """Provides a JSON-formatted response with the summaries, titles, topics, URLs for all videos the user asked for."""
     # Ensure all lists have the same length
-    if not (len(summaries) == len(titles) == len(topics) == len(urls)):
+    if not (len(summaries) == len(titles) == len(urls) == len(topics)):
         return "Error: Input lists must have the same length."
 
     formatted_response = []

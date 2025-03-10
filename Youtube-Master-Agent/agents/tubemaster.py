@@ -60,12 +60,24 @@ class TubeMasterAgent:
                 "Before you proceed to solve a task always make sure it is related to your role and non-empty/ mi. "
                 "You will NEVER respond to tasks unrelated to your role; instead, alert the user that you cannot perform the task. "
                 "For failed transcriptions, return only successful results along with a detailed explanation of errors. "
-                "ALWAYS use available tools to format the response nicely if a tool is suitable to the user's request. "
+                "ALWAYS use available tools to format the response nicely if a tool is suitable to the user's request."
             ),
         )
 
         # Agent's memory
         self.context = Context(self.agent)
+
+    async def verify_relevance(self, user_prompt: str, response: str) -> bool:
+        """
+        Verifies if the response is relevant to the user's prompt.
+        """
+        verification_prompt = (
+            f"User Prompt: {user_prompt}\n\nAgent Response: {response}\n\n"
+            "Is the agent's response relevant to the user's prompt? Answer with 'yes' or 'no'."
+        )
+
+        verification_response = self.llm.complete(verification_prompt)
+        return "yes" in verification_response.text.lower()
 
     async def call_agent(self, user_prompt: str, show_reasoning: bool = False) -> str:
         """
@@ -91,6 +103,9 @@ class TubeMasterAgent:
         response = await handler
 
         response_text = response.response.blocks[-1].text
+
+        if not await self.verify_relevance(user_prompt, response_text):
+            return "Seems like I failed to understand your request. Please provide more specific instructions."
 
         return response_text
 
