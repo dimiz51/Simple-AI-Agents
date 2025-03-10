@@ -57,7 +57,7 @@ class TubeMasterAgent:
             system_prompt=(
                 "You are an AI assistant that can use tools to transcribe audio from YouTube videos, "
                 "create summaries of the video's content, provide contextual information, or can directly answer related questions. "
-                "Before you proceed to solve a task always make sure it is related to your role using the available tools. "
+                "Before you proceed to solve a task always make sure it is related to your role and non-empty/ mi. "
                 "You will NEVER respond to tasks unrelated to your role; instead, alert the user that you cannot perform the task. "
                 "For failed transcriptions, return only successful results along with a detailed explanation of errors. "
                 "ALWAYS use available tools to format the response nicely if a tool is suitable to the user's request. "
@@ -85,7 +85,7 @@ class TubeMasterAgent:
                     )
                 elif isinstance(ev, AgentStream):
                     print(ev.delta, end="", flush=True)
-            print("********End Agent Reasoning********")
+            print("\n********End Agent Reasoning********")
 
         # Get the final response
         response = await handler
@@ -93,22 +93,6 @@ class TubeMasterAgent:
         response_text = response.response.blocks[-1].text
 
         return response_text
-
-    def run(self, video_prompt: str, show_reasoning: bool = False) -> str:
-        """
-        Runs the async function inside an event loop for synchronous execution,
-        while handling already running event loops properly.
-        """
-        try:
-            loop = asyncio.get_running_loop()
-            # If we're in an active loop, schedule the coroutine and return the result
-            future = asyncio.ensure_future(
-                self.call_agent(video_prompt, show_reasoning)
-            )
-            return loop.run_until_complete(future)
-        except RuntimeError:
-            # If no loop is running, use asyncio.run()
-            return asyncio.run(self.call_agent(video_prompt, show_reasoning))
 
     def format_user_prompt(self, user_request: str) -> str:
         """
